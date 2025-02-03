@@ -1,0 +1,199 @@
+﻿openapi: 3.1.0
+info:
+  title: Time Tracking API
+  description: A simple API for collecting time entries based on active window usage
+  version: "1.0.0"
+servers:
+  - url: 'https://apiserver.internal/api'
+paths:
+  /api/time-entries:
+    get:
+      summary: List all time entries
+      description: Retrieve a list of time entries, optionally filtered by user or date range.
+      parameters:
+        - name: userId
+          in: query
+          description: Filter by user identifier
+          required: false
+          schema:
+            type: string
+        - name: start
+          in: query
+          description: Filter entries that start after this date/time
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: end
+          in: query
+          description: Filter entries that start before this date/time
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: A list of Time Entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeEntry'
+    post:
+      summary: Create a new time entry
+      requestBody:
+        description: The data for the new time entry
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTimeEntryRequest'
+            example:
+              userId: "12345"
+              startTime: "2025-01-30T10:00:00Z"
+              endTime: "2025-01-30T10:05:00Z"
+              windowTitle: "ChatGPT - Google Chrome"
+              processName: "chrome"
+      responses:
+        "201":
+          description: The newly created entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+
+  /api/time-entries/{id}:
+    get:
+      summary: Get a specific time entry by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A single Time Entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        "404":
+          description: Time entry not found
+    put:
+      summary: Update an existing time entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The updated fields for the time entry
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTimeEntryRequest'
+            example:
+              startTime: "2025-01-30T10:10:00Z"
+              endTime: "2025-01-30T10:15:00Z"
+              windowTitle: "Updated Window Title"
+              processName: "updated_process"
+      responses:
+        "200":
+          description: Time entry updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        "404":
+          description: Time entry not found
+    delete:
+      summary: Delete a time entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Time entry deleted successfully
+        "404":
+          description: Time entry not found
+
+components:
+  schemas:
+    TimeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the time entry
+        userId:
+          type: string
+          description: ID of the user who owns this entry
+        startTime:
+          type: string
+          format: date-time
+          description: When the user started actively working on this window
+        endTime:
+          type: string
+          format: date-time
+          description: When the user stopped actively working on this window
+        windowTitle:
+          type: string
+          description: The title of the foreground window/application
+        processName:
+          type: string
+          description: The name of the process for the active window
+      required:
+        - id
+        - userId
+        - startTime
+        - endTime
+        - windowTitle
+        - processName
+
+    CreateTimeEntryRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        windowTitle:
+          type: string
+        processName:
+          type: string
+      required:
+        - userId
+        - startTime
+        - endTime
+        - windowTitle
+        - processName
+
+    UpdateTimeEntryRequest:
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        windowTitle:
+          type: string
+        processName:
+          type: string
+      required:
+        - startTime
+        - endTime
+        - windowTitle
+        - processName

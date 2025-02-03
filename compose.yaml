@@ -1,0 +1,12 @@
+﻿services:
+  windowsservice:
+    image: windowsservice
+    build:
+      context: .
+      dockerfile: WindowsService/Dockerfile
+
+  blazorapp1:
+    image: blazorapp1
+    build:
+      context: .
+      dockerfile: BlazorApp1/Dockerfile
