@@ -119,7 +119,7 @@ DesktopApplication/
 
 1. **Clone** this repo:
    ```bash
-   git clone https://github.com/<your-username>/TimeTrackerWpf.git
+   git clone https://github.com/natwhite/WindowsApplicationTracking
    ```
 2. **Open** the solution in your favorite IDE (JetBrains Rider, Visual Studio, etc.).
 3. **Restore** packages:
