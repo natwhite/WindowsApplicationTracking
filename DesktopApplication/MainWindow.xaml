@@ -1,12 +1,28 @@
 ﻿<Window x:Class="DesktopApplication.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DesktopApplication"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Time Tracker - Timeline"
+        Height="600" Width="400">
     <Grid>
-
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <!-- We'll bind an ItemsControl to an ObservableCollection of TimeEntry -->
+            <ItemsControl ItemsSource="{Binding TimeEntries}"
+                          Margin="10">
+                <!-- DataTemplate to show each entry as a "block" -->
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="DarkGray" BorderThickness="1" Margin="5" Padding="5">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold"
+                                           Text="{Binding windowTitle}" />
+                                <TextBlock Text="{Binding processName}" />
+                                <TextBlock Text="{Binding startTime, StringFormat={}{0:HH:mm}}" />
+                                <TextBlock Text="{Binding endTime, StringFormat={}{0:HH:mm}}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </Window>

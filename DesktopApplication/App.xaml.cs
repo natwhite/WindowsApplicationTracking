@@ -1,5 +1,7 @@
 ﻿using System.Windows;
-using System.Windows.Media; // for Application, StartupEventArgs
+using System.Windows.Media;
+using DesktopApplication.di;
+using DesktopApplication.lib; // for Application, StartupEventArgs
 using WinForms = System.Windows.Forms; // alias for System.Windows.Forms
 using Drawing = System.Drawing; // alias for System.Drawing
 
@@ -14,13 +16,27 @@ public partial class App : System.Windows.Application
     private WinForms.NotifyIcon? _trayIcon;
     private WinForms.ContextMenuStrip? _trayMenu;
     private DataService _dataService;
+    private StorageService _storageService;
+    private TrackingService _trackingService;
+    private const string baseUri = "http://localhost:5274/";
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
+        // Initialized the DataService class
+        _dataService = new DataService(baseUri);
+
+        // Initialize Local JSON storage as Storage Service
+        _storageService = new LocalJsonStorageService();
+        _storageService.Load();
+        
+        _trackingService = new TrackingService(_storageService);
+
         // Create the WinForms context menu for the tray
         _trayMenu = new WinForms.ContextMenuStrip();
+        // TODO : Consider collecting strings into separate class to handle different languages
+        _trayMenu.Items.Add("TimeLine", null, OnTimelineClick);
         _trayMenu.Items.Add("Settings", null, OnSettingsClick);
         _trayMenu.Items.Add("Exit", null, OnExitClick);
 
@@ -33,17 +49,11 @@ public partial class App : System.Windows.Application
             Visible = true
         };
 
-        // Optional: If you do NOT want a visible main window, comment out the line below
-        // StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
-
-        // Initialized the DataService class
-        _dataService = new DataService("http://localhost:5274/api/TimeEntries");
-
         // Start background tracking
         StartTracking();
     }
 
-    private async void StartTracking()
+    private async void StartTracking(long pollPeriodSeconds = 5)
     {
         try
         {
@@ -53,9 +63,9 @@ public partial class App : System.Windows.Application
             while (true)
             {
                 // Moving the delay to the start to allow for early termination with a guaranteed delay
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(pollPeriodSeconds));
 
-                TrackingDetails? windowDetails = TrackingMethods.DetectActiveWindow();
+                TrackingDetails? windowDetails = _trackingService.DetectActiveWindow();
                 DateTime timestamp = DateTime.UtcNow;
 
                 // If we were unable to retrieve window data, just move on.
@@ -103,10 +113,18 @@ public partial class App : System.Windows.Application
         }
     }
 
+    private void OnTimelineClick(object? sender, EventArgs e)
+    {
+        // Instantiate MainWindow ourselves so we can pass dependencies
+        // We had to remove MainWindow from the xaml to prevent auto 0 param init
+        var mainWindow = new MainWindow(_dataService);
+        mainWindow.Show();
+    }
+
     private void OnSettingsClick(object? sender, EventArgs e)
     {
-        // var settingsWindow = new SettingsWindow();
-        // settingsWindow.ShowDialog();
+        var settingsWindow = new SettingsWindow(_storageService);
+        settingsWindow.ShowDialog();
 
         // TODO : Implement WPF settings window
     }
@@ -117,6 +135,7 @@ public partial class App : System.Windows.Application
         _trayIcon.Dispose();
 
         // Properly shut down the WPF application
+        // TODO : Consider trying to publish the most recent event before existing
         Shutdown();
     }
 
